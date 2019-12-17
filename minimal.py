@@ -98,6 +98,7 @@ class io:
         else:
             self.out += chr(val)
             self.out = self.out[-20:]
+        print("[%-20s]" % self.out)
 
 #-----------------------------------------------------------------------------
 
@@ -107,17 +108,17 @@ class minimal:
         self.mem = memmap()
         self.io = io()
         self.cpu = z80.cpu(self.mem, self.io)
-        self.bootstrap()
+        self._bootstrap()
 
 
-    def bootstrap(self):
+    def _bootstrap(self):
         """ensure an unhandled ret goes to a halt"""
         self.mem.ram.load(0, (0x76 for n in range(0x800)))
         self.cpu.sp = 0x400
         self.cpu._push(0x400)
 
 
-    def run(self):
+    def run(self,until_halt=True):
         """run the emulation"""
         irq = False
         while True:
@@ -131,13 +132,18 @@ class minimal:
             except z80.Error:
                 self.cpu._set_pc(pc)
                 raise ('exception: %s\n' % self._current_instruction())
+            if until_halt and self.cpu.halt:
+                break
 
     def _quick_regs(self):
-        return "af:%04x bc:%04x de:%04x hl:%04x" % (
+        return "af:%04x bc:%04x de:%04x hl:%04x ix:%04x iy:%04x sp:%04x" % (
                 self.cpu._get_af(),
                 self.cpu._get_bc(),
                 self.cpu._get_de(),
                 self.cpu._get_hl(),
+                self.cpu.ix,
+                self.cpu.iy,
+                self.cpu.sp,
                 )
 
 
@@ -159,6 +165,7 @@ class minimal:
 #-----------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    show_steps = True
     m = minimal()
 
     code = [0xdb,1,     # in a,(1)
@@ -167,5 +174,9 @@ if __name__ == "__main__":
            ]       
 
     m.mem.ram.load(0, code)
-    while not m.cpu.halt:
-        print("%-22s [%-20s] %s" % (m._step()[0], m.cpu.io.out, m._quick_regs()))
+
+    if show_steps:
+        while not m.cpu.halt:
+            print("%-22s %s" % (m._step()[0], m._quick_regs()))
+    else:
+        m.run()
