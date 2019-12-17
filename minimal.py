@@ -116,8 +116,15 @@ class minimal:
         self.cpu._push(0x400)
 
 
-    def run(self,until_halt=True):
+    def run(self,start=0,stack=None,return_to=None,until_halt=True):
         """run the emulation"""
+        if stack is not None:
+            self.cpu.sp = stack
+        if return_to is not None:
+            self._push(return_to)
+        if start is not None:
+            self.cpu._set_pc(start)
+            self.cpu.halt = 0
         irq = False
         while True:
             try:
@@ -166,12 +173,14 @@ if __name__ == "__main__":
     show_steps = False
     m = minimal()
 
-    code = [0xdb,1,     # in a,(1)
+    code = [0x3e,0,     # ld a,0
+            0xd3,1,     # out (1),a ; clear the display
+            0xdb,1,     # in a,(1)  ; read a key
             0xb7,       # or a
-            0xc8,       # ret z
+            0xc8,       # ret z     ; quit if zero
             0x3c,       # inc a
-            0xd3,1,     # out (1),a
-            0xc3,0,0,   # jp 0
+            0xd3,1,     # out (1),a ; write to display
+            0xc3,4,0,   # jp 4
            ]       
 
     m.mem.ram.load(0, code)
