@@ -82,11 +82,9 @@ class io:
         self.inp = ""
 
     def rd(self, adr):
-        """input from any port acts reads from the keyboard"""
+        """input from any port reads from the keyboard"""
         if self.inp == "":
-            self.inp = input("> ")
-            if self.inp == "":
-                self.inp = "?"
+            self.inp = input("> ") + chr(0)
         r = self.inp[0]
         self.inp = self.inp[1:]
         return ord(r)
@@ -165,12 +163,15 @@ class minimal:
 #-----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    show_steps = True
+    show_steps = False
     m = minimal()
 
     code = [0xdb,1,     # in a,(1)
+            0xb7,       # or a
+            0xc8,       # ret z
+            0x3c,       # inc a
             0xd3,1,     # out (1),a
-            0xc9,       # ret
+            0xc3,0,0,   # jp 0
            ]       
 
     m.mem.ram.load(0, code)
