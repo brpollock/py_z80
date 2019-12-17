@@ -4,10 +4,14 @@ Minimal(-ish) Z80 system
 """
 #-----------------------------------------------------------------------------
 
+from __future__ import print_function
 import memory
 import z80da
 import z80
 
+# Python 2/3
+try: input = raw_input
+except NameError: pass
 
 #-----------------------------------------------------------------------------
 
@@ -74,19 +78,26 @@ class io:
     """io handler"""
 
     def __init__(self):
-        self.txt = ""
+        self.out = ""
+        self.inp = ""
 
     def rd(self, adr):
-        """input from any port acts like a keyboard where 'X' is pressed"""
-        return ord("X")
+        """input from any port acts reads from the keyboard"""
+        if self.inp == "":
+            self.inp = input("> ")
+            if self.inp == "":
+                self.inp = "?"
+        r = self.inp[0]
+        self.inp = self.inp[1:]
+        return ord(r)
 
-    def wr(self, adr, val):i
+    def wr(self, adr, val):
         """output to any port acts like a 20 character scrolling display"""
         if val < 32:
-            self.text = ""
+            self.out = ""
         else:
-            self.txt += chr(val)
-            self.txt = self.txt[-20:]
+            self.out += chr(val)
+            self.out = self.out[-20:]
 
 #-----------------------------------------------------------------------------
 
@@ -157,4 +168,4 @@ if __name__ == "__main__":
 
     m.mem.ram.load(0, code)
     while not m.cpu.halt:
-        print "%-22s [%-20s] %s" % (m._step()[0], m.cpu.io.txt, m._quick_regs())
+        print("%-22s [%-20s] %s" % (m._step()[0], m.cpu.io.out, m._quick_regs()))
