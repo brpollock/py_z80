@@ -896,7 +896,7 @@ def emit_out_c_r(out, r):
 
 def emit_unimplemented(out):
     """unimplemented instruction - crash"""
-    out.put('raise Error, \'unimplemented instruction\'\n')
+    out.put('raise Exception(\'unimplemented instruction\')\n')
 
 #-----------------------------------------------------------------------------
 
